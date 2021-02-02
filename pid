@@ -1,0 +1,49 @@
+#include "pid.h"
+
+struct _pid {
+	float SetSpeed;
+	float ActualSpeed;
+	float err;
+	float err_last;
+	float Kp, Ki, Kd;
+	float voltage;
+	float integral;
+} pid;
+
+int action;
+float speed;
+
+void PID_init(float Kd,float Ki,float Kp) {
+	pid.SetSpeed = speed;
+	pid.ActualSpeed = 0.0;
+	pid.err = 0.0;
+	pid.err_last = 0.0;
+	pid.voltage = 0.0;
+	pid.integral = 0.0;
+	pid.Kd = Kd;
+	pid.Ki = Ki;
+	pid.Kp = Kp;
+}
+
+float PID_realize(float speed,float speed_set) {
+	pid.ActualSpeed = speed;
+  pid.SetSpeed = speed_set;
+	pid.err = pid.SetSpeed - pid.ActualSpeed;
+	pid.integral = pid.integral + pid.err;
+	pid.voltage = pid.Kp * pid.err + pid.Ki * pid.integral + pid.Kd * (pid.err - pid.err_last);
+	pid.err_last = pid.err;
+	pid.ActualSpeed = pid.voltage * 1.0;
+	return pid.ActualSpeed;
+}
+
+float PID_cycle(float speed,int times) {
+	action = 0;
+	while (action < 1000) {
+		speed = PID_realize(speed);
+		action++;
+	}
+	pid.err = 0;
+	pid.err_last = 0;
+	pid.integral = 0;
+	return speed;
+}
